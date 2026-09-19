@@ -60,17 +60,26 @@ android {
                 keyPassword = keystoreProperties["keyPassword"] as String?
                 val storeFilePath = keystoreProperties["storeFile"] as String?
                 if (!storeFilePath.isNullOrBlank()) {
-                    storeFile = file(storeFilePath)
+                    val keystore = rootProject.file(storeFilePath)
+                    if (keystore.isFile) {
+                        storeFile = keystore
+                    }
                 }
                 storePassword = keystoreProperties["storePassword"] as String?
             }
         }
     }
 
+    val releaseKeystoreFile = signingConfigs.getByName("release").storeFile
+    val useReleaseKeystore =
+        keystorePropertiesFile.exists() && releaseKeystoreFile != null && releaseKeystoreFile.isFile
+
     buildTypes {
         release {
-            if (keystorePropertiesFile.exists()) {
-                signingConfig = signingConfigs.getByName("release")
+            signingConfig = if (useReleaseKeystore) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
             }
             proguardFiles(
                 getDefaultProguardFile("proguard-android.txt"),
