@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "417891932059",
+    "project_id": "drivo-bec2e",
+    "storage_bucket": "drivo-bec2e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:417891932059:android:e4ddd3891a4dcc8818333e",
+        "android_client_info": {
+          "package_name": "com.pt.drivo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "417891932059-4fbp7c5ettu66viubhd9b5k0j68ktk5r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5DjsmqCfntRL_kmPuBwsYIvk6I70sewg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "417891932059-4fbp7c5ettu66viubhd9b5k0j68ktk5r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:417891932059:android:7d4cfbc1f40e1fb518333e",
+        "android_client_info": {
+          "package_name": "com.pt.drivodriver"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "417891932059-4fbp7c5ettu66viubhd9b5k0j68ktk5r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5DjsmqCfntRL_kmPuBwsYIvk6I70sewg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "417891932059-4fbp7c5ettu66viubhd9b5k0j68ktk5r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
