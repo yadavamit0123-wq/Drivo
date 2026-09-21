@@ -80,6 +80,7 @@ class _OtpPageState extends State<OtpPage> with SingleTickerProviderStateMixin {
               SignInWithOTPEvent(
                 isOtpVerify: widget.arg.isOtpVerify,
                 isForgotPassword: false,
+                userExist: widget.arg.userExist,
                 mobileOrEmail: widget.arg.mobileOrEmail,
                 dialCode: widget.arg.dialCode,
                 isLoginByEmail: widget.arg.isLoginByEmail,
@@ -100,7 +101,9 @@ class _OtpPageState extends State<OtpPage> with SingleTickerProviderStateMixin {
               state is ConfirmOrOTPVerifyFailureState ||
               state is ConfirmOrOTPVerifySuccessState) {
             CustomLoader.dismiss(context);
+            context.read<AuthBloc>().isLoading = false;
           } else if (state is NewUserRegisterState) {
+            CustomLoader.dismiss(context);
             context.read<AuthBloc>().isLoading = false;
             if (mounted) {
               Navigator.pushNamed(context, RegisterPage.routeName,
@@ -313,7 +316,7 @@ class _OtpPageState extends State<OtpPage> with SingleTickerProviderStateMixin {
           cursorColor: Theme.of(context).dividerColor,
           animationDuration: const Duration(milliseconds: 300),
           enableActiveFill: true,
-          enablePinAutofill: false,
+          enablePinAutofill: true,
           autoDisposeControllers: false,
           keyboardType: TextInputType.number,
           boxShadows: const [
@@ -325,6 +328,22 @@ class _OtpPageState extends State<OtpPage> with SingleTickerProviderStateMixin {
           ],
           beforeTextPaste: (_) => false,
           onChanged: (_) => context.read<AuthBloc>().add(OTPOnChangeEvent()),
+          onCompleted: (value) {
+            context.read<AuthBloc>().add(
+                  ConfirmOrVerifyOTPEvent(
+                    isUserExist: widget.arg.userExist,
+                    isLoginByEmail: widget.arg.isLoginByEmail,
+                    isOtpVerify: context.read<AuthBloc>().isOtpVerify,
+                    isForgotPasswordVerify: false,
+                    mobileOrEmail: widget.arg.mobileOrEmail,
+                    otp: value,
+                    password: context.read<AuthBloc>().passwordController.text,
+                    firebaseVerificationId:
+                        context.read<AuthBloc>().firebaseVerificationId,
+                    context: context,
+                  ),
+                );
+          },
           inputFormatters: [
             FilteringTextInputFormatter.digitsOnly,
           ],
@@ -359,6 +378,8 @@ class _OtpPageState extends State<OtpPage> with SingleTickerProviderStateMixin {
                             SignInWithOTPEvent(
                               isOtpVerify: widget.arg.isOtpVerify,
                               isForgotPassword: false,
+                              userExist: widget.arg.userExist,
+                              isResend: true,
                               mobileOrEmail: widget.arg.mobileOrEmail,
                               dialCode: widget.arg.dialCode,
                               isLoginByEmail: widget.arg.isLoginByEmail,

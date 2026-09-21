@@ -59,6 +59,8 @@ class SignInWithOTPEvent extends AuthEvent {
   final bool isOtpVerify;
   final bool isLoginByEmail;
   final bool isForgotPassword;
+  final bool userExist;
+  final bool isResend;
   final String mobileOrEmail;
   final String dialCode;
   final BuildContext context;
@@ -69,8 +71,12 @@ class SignInWithOTPEvent extends AuthEvent {
       required this.isForgotPassword,
       required this.mobileOrEmail,
       required this.dialCode,
-      required this.context});
+      required this.context,
+      this.userExist = false,
+      this.isResend = false});
 }
+
+class FirebasePhoneAutoVerifiedEvent extends AuthEvent {}
 
 class ConfirmOrVerifyOTPEvent extends AuthEvent {
   final bool isUserExist;

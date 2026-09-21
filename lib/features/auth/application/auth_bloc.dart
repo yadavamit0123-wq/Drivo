@@ -60,6 +60,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   dynamic firebaseCredentials;
   String firebaseVerificationId = '';
   dynamic firebaseResendToken;
+  bool pendingOtpUserExist = false;
+  bool pendingOtpIsForgotPassword = false;
+  bool pendingOtpIsOtpVerify = true;
+  bool pendingOtpIsLoginByEmail = false;
+  String pendingOtpMobile = '';
+  String pendingOtpPassword = '';
 
   List<Country> countries = [];
   List<Widget> splashImages = [
@@ -103,6 +109,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<OTPOnChangeEvent>(_otpOnChange);
     on<GetCommonModuleEvent>(_commonModules);
     on<SignInWithOTPEvent>(_signInWithOTP);
+    on<FirebasePhoneAutoVerifiedEvent>(_firebasePhoneAutoVerified);
     on<ConfirmOrVerifyOTPEvent>(_confirmOrVerifyOTP);
     on<VerifyTimerEvent>(_timerEvent);
 
@@ -241,12 +248,46 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
+  Future<void> _firebasePhoneAutoVerified(
+      FirebasePhoneAutoVerifiedEvent event, Emitter<AuthState> emit) async {
+    isLoading = false;
+    if (pendingOtpIsForgotPassword) {
+      emit(ForgotPasswordOTPVerifyState());
+      return;
+    }
+    if (!pendingOtpUserExist) {
+      emit(NewUserRegisterState());
+      return;
+    }
+    final ctx = navigatorKey.currentContext;
+    if (ctx == null) {
+      emit(SignInWithOTPFailureState());
+      return;
+    }
+    add(LoginUserEvent(
+      emailOrMobile: pendingOtpMobile,
+      otp: otpController.text,
+      password: pendingOtpPassword,
+      isOtpLogin: pendingOtpIsOtpVerify,
+      isLoginByEmail: pendingOtpIsLoginByEmail,
+      context: ctx,
+    ));
+  }
+
   Future<void> verifyPhoneNumber(String phoneNumber, context) async {
     final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
     await firebaseAuth.verifyPhoneNumber(
       phoneNumber: phoneNumber,
       verificationCompleted: (PhoneAuthCredential credential) async {
         firebaseCredentials = credential;
+        try {
+          await FirebaseAuth.instance.signInWithCredential(credential);
+          add(FirebasePhoneAutoVerifiedEvent());
+        } catch (e) {
+          debugPrint('Auto phone verification failed: $e');
+          isLoading = false;
+          add(AuthUpdateEvent());
+        }
       },
       verificationFailed: (FirebaseAuthException e) {
         debugPrint('Firebase verifyPhoneNumber failed: ${e.code} ${e.message}');
@@ -274,8 +315,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _signInWithOTP(
       SignInWithOTPEvent event, Emitter<AuthState> emit) async {
     isLoading = true;
-    otpController.text = '';
+    if (event.isResend) {
+      otpController.clear();
+    }
     isOtpVerify = event.isOtpVerify;
+    pendingOtpUserExist = event.userExist;
+    pendingOtpIsForgotPassword = event.isForgotPassword;
+    pendingOtpIsOtpVerify = event.isOtpVerify;
+    pendingOtpIsLoginByEmail = event.isLoginByEmail;
+    pendingOtpMobile = event.mobileOrEmail;
+    pendingOtpPassword = passwordController.text;
     final firebaseEnabled = await _isFirebaseOtpCallEnabled();
 
     if (firebaseEnabled && !event.isLoginByEmail) {
