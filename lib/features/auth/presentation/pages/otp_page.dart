@@ -95,7 +95,13 @@ class _OtpPageState extends State<OtpPage> with SingleTickerProviderStateMixin {
             CustomLoader.loader(context);
           } else if (state is LoginFailureState) {
             CustomLoader.dismiss(context);
+          } else if (state is SignInWithOTPSuccessState ||
+              state is SignInWithOTPFailureState ||
+              state is ConfirmOrOTPVerifyFailureState ||
+              state is ConfirmOrOTPVerifySuccessState) {
+            CustomLoader.dismiss(context);
           } else if (state is NewUserRegisterState) {
+            context.read<AuthBloc>().isLoading = false;
             if (mounted) {
               Navigator.pushNamed(context, RegisterPage.routeName,
                   arguments: RegisterPageArguments(

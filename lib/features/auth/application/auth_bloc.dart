@@ -227,6 +227,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(SelectLoginMethodState());
   }
 
+  Future<bool> _isFirebaseOtpCallEnabled() async {
+    try {
+      final snapshot = await FirebaseDatabase.instance
+          .ref()
+          .child('call_FB_OTP')
+          .get()
+          .timeout(const Duration(seconds: 12));
+      return snapshot.value == true;
+    } catch (e) {
+      debugPrint('call_FB_OTP read failed: $e');
+      return false;
+    }
+  }
+
   Future<void> verifyPhoneNumber(String phoneNumber, context) async {
     final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
     await firebaseAuth.verifyPhoneNumber(
@@ -235,11 +249,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         firebaseCredentials = credential;
       },
       verificationFailed: (FirebaseAuthException e) {
+        debugPrint('Firebase verifyPhoneNumber failed: ${e.code} ${e.message}');
         if (e.code == 'invalid-phone-number') {
-          debugPrint('The provided phone number is not valid.');
           showToast(message: AppLocalizations.of(context)!.notValidPhoneNumber);
+        } else {
+          showToast(message: e.message ?? e.code);
         }
         isLoading = false;
+        add(AuthUpdateEvent());
       },
       codeSent: (String verificationId, int? resendToken) async {
         firebaseVerificationId = verificationId;
@@ -259,10 +276,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     isLoading = true;
     otpController.text = '';
     isOtpVerify = event.isOtpVerify;
-    final firebaseEnabled =
-        await FirebaseDatabase.instance.ref().child('call_FB_OTP').get();
+    final firebaseEnabled = await _isFirebaseOtpCallEnabled();
 
-    if (firebaseEnabled.value == true && !event.isLoginByEmail) {
+    if (firebaseEnabled && !event.isLoginByEmail) {
       if (isFirebaseOtpVerifyEnable && !event.isLoginByEmail) {
         await verifyPhoneNumber(
             '${event.dialCode}${event.mobileOrEmail}', event.context);
@@ -346,11 +362,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       ConfirmOrVerifyOTPEvent event, Emitter<AuthState> emit) async {
     isLoading = true;
     emit(VerifyLoadingState());
-    final firebaseEnabled =
-        await FirebaseDatabase.instance.ref().child('call_FB_OTP').get();
+    final firebaseEnabled = await _isFirebaseOtpCallEnabled();
     if (event.otp.isNotEmpty) {
-      if (firebaseEnabled.value == true && !event.isLoginByEmail) {
+      if (firebaseEnabled && !event.isLoginByEmail) {
         if (isFirebaseOtpVerifyEnable && !event.isLoginByEmail) {
+          if (event.firebaseVerificationId.isEmpty) {
+            showToast(
+                message: AppLocalizations.of(event.context)!.enterValidOtp);
+            isLoading = false;
+            otpController.clear();
+            emit(SignInWithOTPFailureState());
+            return;
+          }
           try {
             PhoneAuthCredential credential = PhoneAuthProvider.credential(
                 verificationId: event.firebaseVerificationId,
@@ -390,6 +413,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
               otpController.clear();
               emit(SignInWithOTPFailureState());
             }
+          } catch (error) {
+            debugPrint(error.toString());
+            showToast(message: AppLocalizations.of(event.context)!.enterValidOtp);
+            isLoading = false;
+            otpController.clear();
+            emit(SignInWithOTPFailureState());
           }
         } else {
           if (!event.isLoginByEmail) {

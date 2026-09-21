@@ -31,14 +31,15 @@ jobs:
             echo "::error::Missing Android signing secrets (ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_PASSWORD, ANDROID_KEY_ALIAS)."
             exit 1
           fi
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/prt.jks
+          echo "$ANDROID_KEYSTORE_BASE64" | tr -d '\n\r ' | base64 -d > android/prt.jks
           test -s android/prt.jks
-          cat > android/key.properties <<EOF
-          storePassword=$ANDROID_KEYSTORE_PASSWORD
-          keyPassword=$ANDROID_KEY_PASSWORD
-          keyAlias=$ANDROID_KEY_ALIAS
-          storeFile=prt.jks
-          EOF
+          {
+            echo "storePassword=${ANDROID_KEYSTORE_PASSWORD}"
+            echo "keyPassword=${ANDROID_KEY_PASSWORD}"
+            echo "keyAlias=${ANDROID_KEY_ALIAS}"
+            echo "storeFile=prt.jks"
+          } > android/key.properties
+          keytool -list -keystore android/prt.jks -storepass "${ANDROID_KEYSTORE_PASSWORD}" -alias "${ANDROID_KEY_ALIAS}" >/dev/null
 
       - run: flutter pub get
       - run: flutter build apk --release
