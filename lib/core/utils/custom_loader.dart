@@ -5,16 +5,17 @@ import '../../common/common.dart';
 final navigatorKey = GlobalKey<NavigatorState>();
 
 class CustomLoader {
-  static int _openDialogCount = 0;
+  static bool _isShowing = false;
 
-  static Future loader(BuildContext context) async {
-    if (!context.mounted) {
-      return Future.value();
+  static Future<void> loader(BuildContext context) async {
+    if (!context.mounted || _isShowing) {
+      return;
     }
-    _openDialogCount++;
+    _isShowing = true;
     try {
-      await showDialog<dynamic>(
+      await showDialog<void>(
         context: context,
+        useRootNavigator: true,
         barrierColor: Colors.white.withAlpha((0.8 * 255).toInt()),
         barrierDismissible: true,
         builder: (BuildContext context) {
@@ -28,26 +29,34 @@ class CustomLoader {
         },
       );
     } finally {
-      if (_openDialogCount > 0) {
-        _openDialogCount--;
-      }
+      _isShowing = false;
     }
   }
 
   static void dismiss(BuildContext context) {
-    if (_openDialogCount <= 0) {
+    if (!_isShowing) {
       return;
     }
-    final rootContext = navigatorKey.currentContext;
-    if (rootContext == null || !rootContext.mounted) {
-      _openDialogCount = 0;
-      return;
+
+    var popped = false;
+
+    void attemptPop(BuildContext? ctx) {
+      if (popped || ctx == null || !ctx.mounted) {
+        return;
+      }
+      final navigator = Navigator.of(ctx, rootNavigator: true);
+      if (navigator.canPop()) {
+        navigator.pop();
+        popped = true;
+      }
     }
-    final navigator = Navigator.of(rootContext, rootNavigator: true);
-    if (navigator.canPop()) {
-      navigator.pop();
-      _openDialogCount--;
+
+    attemptPop(context.mounted ? context : null);
+    if (!popped) {
+      attemptPop(navigatorKey.currentContext);
     }
+
+    _isShowing = false;
   }
 }
 
