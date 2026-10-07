@@ -13,7 +13,6 @@ import '../../../../core/utils/custom_text.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../application/home_bloc.dart';
 import 'bottom_sheet_widget.dart';
-import 'banner_widget.dart';
 
 class HomeBodyWidget extends StatefulWidget {
   final HomeBloc home;
@@ -592,18 +591,6 @@ class _HomeBodyWidgetState extends State<HomeBodyWidget>
                     double currentSize = sheetSize;
                     return Stack(
                       children: [
-                        if (currentSize < 0.9 &&
-                            homeBloc.userData != null &&
-                            homeBloc.userData!.bannerImage != null &&
-                            homeBloc.userData!.bannerImage.data.isNotEmpty)
-                          Positioned(
-                            bottom: MediaQuery.of(context).size.height *
-                                    currentSize +
-                                16,
-                            left: 16,
-                            right: 16,
-                            child: BannerWidget(cont: context),
-                          ),
                         GestureDetector(
                           onVerticalDragUpdate: (details) {
                             if (!homeBloc.isDraggingSheet) {

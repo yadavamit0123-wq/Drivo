@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
+  /// Matches splash / app icon background.
+  static const Color splashBackground = Color(0xFF0B1525);
+
   static const Color primary = Color(0xFF001CAD);
   static const Color secondary = Color(0xFF001CAD);
   static const Color secondaryDark = Color.fromRGBO(84, 197, 248, 1);

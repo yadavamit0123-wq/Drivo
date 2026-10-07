@@ -88,6 +88,10 @@ class BottomSheetWidget extends StatelessWidget {
                       SizedBox(height: size.width * 0.025),
                     ] else
                       SizedBox(height: size.width * 0.05),
+                    if (homeBloc.userData != null &&
+                        homeBloc.userData!.bannerImage != null &&
+                        homeBloc.userData!.bannerImage.data.isNotEmpty)
+                      BannerWidget(cont: context),
                     Expanded(
                       child: SingleChildScrollView(
                         physics: homeBloc.isSheetAtTop
@@ -111,14 +115,6 @@ class BottomSheetWidget extends StatelessWidget {
                             if (homeBloc.recentSearchPlaces.isNotEmpty &&
                                 homeBloc.selectedServiceIndex != 2)
                               _buildRecentSearch(context, size, homeBloc),
-                            if (homeBloc.sheetSize > 0.7 &&
-                                homeBloc.userData != null &&
-                                homeBloc.userData!.bannerImage != null &&
-                                homeBloc.userData!.bannerImage.data.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 16.0),
-                                child: BannerWidget(cont: context),
-                              ),
                             if (homeBloc.sheetSize > 0.7 &&
                                 context
                                     .read<HomeBloc>()
